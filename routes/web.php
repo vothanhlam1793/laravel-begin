@@ -28,7 +28,7 @@ Route::get('/', function () {
 Route::get('/task', function() {
     $tasks = \App\Models\Task::all();
     return view('task', compact('tasks'));
-})->name('tasks.lists');
+});
 
 Route::get('/cTask', function() {
     return view('createTask');
@@ -37,15 +37,14 @@ Route::get('/cTask', function() {
 Route::resource('tasks', TaskController::class);
 
 Route::get('/tlug/{slug}', function($slug){
-    $task = Task::where('slug', $slug)->first();
-        if (!$task) {
-            abort(404); // Task không tồn tại, hiển thị trang 404
-        }
-
-        return view('tasks.show', compact('task'));
+    $task = Task::where('slug', $slug)->orWhereHas('slugHistories', function ($query) use ($slug) {
+        $query->where('old_slug', $slug);
+    })->first();
+    if (!$task) {
+        abort(404); // Task không tồn tại, hiển thị trang 404   
+    }   
+    return view('tasks.show', compact('task'));
 });
-
-// Route::get('/tasksSlug/{slug}', 'TaskController@showBySlug')->name('tasks.showBySlug');
 
 Route::get('/tasks/{id}/edit', 'TaskController@edit')->name('tasks.editForm');
 

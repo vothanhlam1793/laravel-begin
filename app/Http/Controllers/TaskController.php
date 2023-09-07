@@ -4,6 +4,9 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Task;
+use Illuminate\Support\Str;
+use App\Models\TaskSlugHistory;
+
 
 class TaskController extends Controller
 {
@@ -55,9 +58,25 @@ class TaskController extends Controller
         if (!$task) {
             return response()->json(['message' => 'Task not found'], 404);
         }
+        $oldSlug = $task->slug;
+
         $task->name = $request->input('name');
+        $task->slug = Str::slug($request->input('name'));
         $task->description = $request->input('description');
+
+        TaskSlugHistory::create([
+            'task_id' => $task->id,
+            'old_slug' => $oldSlug,
+            'new_slug' => $task->slug,
+        ]);
+
         $task->save();
+
+        
+
+        // $task->name = $request->input('name');
+        // $task->description = $request->input('description');
+        // $task->save();
 
         return response()->json($task);
     }
